@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "../index.css"; // Cambiado a la ruta correcta
+import "../index.css"; // Ruta correcta
 
 const AmigoSecreto = () => {
   const nombresParticipantes = [
@@ -19,6 +19,7 @@ const AmigoSecreto = () => {
   const [amigoSecreto, setAmigoSecreto] = useState("");
   const [mensajePersonalizado, setMensajePersonalizado] = useState("");
   const [mensajeError, setMensajeError] = useState(""); // Para mostrar mensajes de error
+  const [nombreIngresado, setNombreIngresado] = useState(null); // Para almacenar el nombre ingresado
 
   useEffect(() => {
     generarAsignaciones();
@@ -60,6 +61,12 @@ const AmigoSecreto = () => {
   };
 
   const mostrarAsignacion = () => {
+    // Verificar si el nombre ya fue ingresado
+    if (nombreIngresado) {
+      setMensajeError("Ya ingresaste tu nombre, no puedes ingresar otro.");
+      return;
+    }
+
     if (!nombre) {
       setMensajePersonalizado("");
       setMensajeError("Por favor, ingresa tu nombre.");
@@ -74,14 +81,13 @@ const AmigoSecreto = () => {
       return;
     }
 
-    if (asignaciones[nombre]) {
-      setMensajeError("Ya ingresaste tu nombre, no puedes ingresar otro.");
-      return;
-    }
-
+    // Si el nombre es válido y no ha sido ingresado antes
     const amigo = asignaciones[nombre];
     setAmigoSecreto(amigo);
     setMensajePersonalizado(`${nombre}, tu Amigo Secreto es: ${amigo} 🎉`);
+
+    // Marcar que el nombre ha sido ingresado
+    setNombreIngresado(nombre);
 
     // Limpiar el campo de entrada
     setNombre("");
@@ -99,8 +105,11 @@ const AmigoSecreto = () => {
           onChange={(e) => setNombre(e.target.value)}
           placeholder="Tu nombre"
           className="input-nombre"
+          disabled={!!nombreIngresado} // Deshabilitar si ya se ingresó un nombre
         />
-        <button onClick={mostrarAsignacion}>🔍 Mostrar Amigo Secreto</button>
+        <button onClick={mostrarAsignacion} disabled={!!nombreIngresado}>
+          🔍 Mostrar Amigo Secreto
+        </button>
       </div>
       {mensajePersonalizado && <h3>{mensajePersonalizado}</h3>}
       {mensajeError && <h3 className="error">{mensajeError}</h3>}
