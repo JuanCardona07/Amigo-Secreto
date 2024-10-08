@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import "../index.css"; // Ajusta esta ruta según la estructura de tu proyecto
 
 const AmigoSecreto = () => {
   const nombresParticipantes = [
@@ -17,6 +18,7 @@ const AmigoSecreto = () => {
   const [asignaciones, setAsignaciones] = useState({});
   const [amigoSecreto, setAmigoSecreto] = useState("");
   const [mensajePersonalizado, setMensajePersonalizado] = useState("");
+  const [nombreIngresado, setNombreIngresado] = useState(false); // Para rastrear si el nombre ya fue ingresado
 
   useEffect(() => {
     generarAsignaciones();
@@ -50,6 +52,13 @@ const AmigoSecreto = () => {
       return;
     }
 
+    if (nombreIngresado) {
+      setMensajePersonalizado(
+        "Ya ingresaste tu nombre, no puedes ingresar otro."
+      );
+      return;
+    }
+
     if (!(nombre in asignaciones)) {
       setMensajePersonalizado(
         "El nombre ingresado no está en la lista de participantes."
@@ -59,12 +68,9 @@ const AmigoSecreto = () => {
 
     const amigo = asignaciones[nombre];
     setAmigoSecreto(amigo);
-
-    // Mensaje personalizado
+    setNombreIngresado(true); // Marca que el nombre ya fue ingresado
     setMensajePersonalizado(`${nombre}, tu Amigo Secreto es: ${amigo} 🎉`);
-
-    // Limpiar el campo de entrada
-    setNombre("");
+    setNombre(""); // Limpiar el campo de entrada
   };
 
   return (
@@ -82,7 +88,9 @@ const AmigoSecreto = () => {
         />
         <button onClick={mostrarAsignacion}>🔍 Mostrar Amigo Secreto</button>
       </div>
-      {mensajePersonalizado && <h3>{mensajePersonalizado}</h3>}
+      {mensajePersonalizado && (
+        <h3 className="error">{mensajePersonalizado}</h3>
+      )}
       <div>
         <h4>Participantes:</h4>
         <ul>
