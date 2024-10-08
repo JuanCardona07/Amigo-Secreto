@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "../index.css"; // Ajusta esta ruta según la estructura de tu proyecto
+import "../index.css"; // Cambiado a la ruta correcta
 
 const AmigoSecreto = () => {
   const nombresParticipantes = [
@@ -18,7 +18,7 @@ const AmigoSecreto = () => {
   const [asignaciones, setAsignaciones] = useState({});
   const [amigoSecreto, setAmigoSecreto] = useState("");
   const [mensajePersonalizado, setMensajePersonalizado] = useState("");
-  const [nombreIngresado, setNombreIngresado] = useState(false); // Para rastrear si el nombre ya fue ingresado
+  const [mensajeError, setMensajeError] = useState(""); // Para mostrar mensajes de error
 
   useEffect(() => {
     generarAsignaciones();
@@ -43,34 +43,48 @@ const AmigoSecreto = () => {
       newAsignaciones[name] = deranged[index];
     });
 
+    // Verificar que todos los nombres estén asignados y no haya duplicados
+    const valoresAsignaciones = Object.values(newAsignaciones);
+    const nombresUnicos = new Set(valoresAsignaciones);
+
+    if (
+      valoresAsignaciones.length === nombresParticipantes.length &&
+      valoresAsignaciones.length === nombresUnicos.size
+    ) {
+      console.log("Asignaciones válidas:", newAsignaciones);
+    } else {
+      console.error("Error: Asignaciones inválidas.");
+    }
+
     setAsignaciones(newAsignaciones);
   };
 
   const mostrarAsignacion = () => {
     if (!nombre) {
-      setMensajePersonalizado("Por favor, ingresa tu nombre.");
-      return;
-    }
-
-    if (nombreIngresado) {
-      setMensajePersonalizado(
-        "Ya ingresaste tu nombre, no puedes ingresar otro."
-      );
+      setMensajePersonalizado("");
+      setMensajeError("Por favor, ingresa tu nombre.");
       return;
     }
 
     if (!(nombre in asignaciones)) {
-      setMensajePersonalizado(
+      setMensajePersonalizado("");
+      setMensajeError(
         "El nombre ingresado no está en la lista de participantes."
       );
       return;
     }
 
+    if (asignaciones[nombre]) {
+      setMensajeError("Ya ingresaste tu nombre, no puedes ingresar otro.");
+      return;
+    }
+
     const amigo = asignaciones[nombre];
     setAmigoSecreto(amigo);
-    setNombreIngresado(true); // Marca que el nombre ya fue ingresado
     setMensajePersonalizado(`${nombre}, tu Amigo Secreto es: ${amigo} 🎉`);
-    setNombre(""); // Limpiar el campo de entrada
+
+    // Limpiar el campo de entrada
+    setNombre("");
   };
 
   return (
@@ -88,9 +102,8 @@ const AmigoSecreto = () => {
         />
         <button onClick={mostrarAsignacion}>🔍 Mostrar Amigo Secreto</button>
       </div>
-      {mensajePersonalizado && (
-        <h3 className="error">{mensajePersonalizado}</h3>
-      )}
+      {mensajePersonalizado && <h3>{mensajePersonalizado}</h3>}
+      {mensajeError && <h3 className="error">{mensajeError}</h3>}
       <div>
         <h4>Participantes:</h4>
         <ul>
