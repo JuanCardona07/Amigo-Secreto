@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "../index.css"; // Ruta correcta
+import "../index.css";
 
 const AmigoSecreto = () => {
   const nombresParticipantes = [
@@ -18,12 +18,40 @@ const AmigoSecreto = () => {
   const [asignaciones, setAsignaciones] = useState({});
   const [amigoSecreto, setAmigoSecreto] = useState("");
   const [mensajePersonalizado, setMensajePersonalizado] = useState("");
-  const [mensajeError, setMensajeError] = useState(""); // Para mostrar mensajes de error
-  const [nombreIngresado, setNombreIngresado] = useState(null); // Para almacenar el nombre ingresado
+  const [mensajeError, setMensajeError] = useState("");
+  const [nombresIngresados, setNombresIngresados] = useState(new Set());
+  const [inputDeshabilitado, setInputDeshabilitado] = useState(false); // Para deshabilitar el cuadro de texto
+
+  const horasParaActualizar = 24; // Tiempo en horas para cambiar asignaciones
 
   useEffect(() => {
-    generarAsignaciones();
+    verificarAsignaciones();
   }, []);
+
+  // Función para verificar si deben generarse nuevas asignaciones
+  const verificarAsignaciones = () => {
+    const fechaGuardada = localStorage.getItem("fechaAsignacion");
+    const asignacionesGuardadas = localStorage.getItem("asignaciones");
+
+    if (fechaGuardada && asignacionesGuardadas) {
+      const fechaGuardadaDate = new Date(fechaGuardada);
+      const fechaActual = new Date();
+
+      // Calcular la diferencia en horas
+      const diferenciaHoras = Math.floor(
+        (fechaActual - fechaGuardadaDate) / (1000 * 60 * 60)
+      );
+
+      if (diferenciaHoras < horasParaActualizar) {
+        // Usar las asignaciones previas si no ha pasado el tiempo definido
+        setAsignaciones(JSON.parse(asignacionesGuardadas));
+        return;
+      }
+    }
+
+    // Generar nuevas asignaciones si no hay ninguna o ya pasó el tiempo
+    generarAsignaciones();
+  };
 
   const generarAsignaciones = () => {
     const shuffled = [...nombresParticipantes];
@@ -44,25 +72,15 @@ const AmigoSecreto = () => {
       newAsignaciones[name] = deranged[index];
     });
 
-    // Verificar que todos los nombres estén asignados y no haya duplicados
-    const valoresAsignaciones = Object.values(newAsignaciones);
-    const nombresUnicos = new Set(valoresAsignaciones);
-
-    if (
-      valoresAsignaciones.length === nombresParticipantes.length &&
-      valoresAsignaciones.length === nombresUnicos.size
-    ) {
-      console.log("Asignaciones válidas:", newAsignaciones);
-    } else {
-      console.error("Error: Asignaciones inválidas.");
-    }
+    // Guardar las nuevas asignaciones y la fecha en localStorage
+    localStorage.setItem("asignaciones", JSON.stringify(newAsignaciones));
+    localStorage.setItem("fechaAsignacion", new Date().toISOString());
 
     setAsignaciones(newAsignaciones);
   };
 
   const mostrarAsignacion = () => {
-    // Verificar si el nombre ya fue ingresado
-    if (nombreIngresado) {
+    if (nombresIngresados.has(nombre)) {
       setMensajeError("Ya ingresaste tu nombre, no puedes ingresar otro.");
       return;
     }
@@ -81,15 +99,16 @@ const AmigoSecreto = () => {
       return;
     }
 
-    // Si el nombre es válido y no ha sido ingresado antes
     const amigo = asignaciones[nombre];
     setAmigoSecreto(amigo);
     setMensajePersonalizado(`${nombre}, tu Amigo Secreto es: ${amigo} 🎉`);
 
-    // Marcar que el nombre ha sido ingresado
-    setNombreIngresado(nombre);
+    // Agregar el nombre al conjunto de nombres ingresados
+    setNombresIngresados((prev) => new Set(prev).add(nombre));
 
-    // Limpiar el campo de entrada
+    // Bloquear el campo de texto para evitar que se ingresen más nombres
+    setInputDeshabilitado(true);
+
     setNombre("");
   };
 
@@ -105,9 +124,9 @@ const AmigoSecreto = () => {
           onChange={(e) => setNombre(e.target.value)}
           placeholder="Tu nombre"
           className="input-nombre"
-          disabled={!!nombreIngresado} // Deshabilitar si ya se ingresó un nombre
+          disabled={inputDeshabilitado} // Deshabilitar el campo de texto si el nombre ya ha sido ingresado
         />
-        <button onClick={mostrarAsignacion} disabled={!!nombreIngresado}>
+        <button onClick={mostrarAsignacion} disabled={inputDeshabilitado}>
           🔍 Mostrar Amigo Secreto
         </button>
       </div>
