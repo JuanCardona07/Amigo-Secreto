@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/Amigo-Secreto/static/css/main.e204f022.css",
-    "main.js": "/Amigo-Secreto/static/js/main.c70b2ad9.js",
+    "main.js": "/Amigo-Secreto/static/js/main.b094e013.js",
     "index.html": "/Amigo-Secreto/index.html",
     "main.e204f022.css.map": "/Amigo-Secreto/static/css/main.e204f022.css.map",
-    "main.c70b2ad9.js.map": "/Amigo-Secreto/static/js/main.c70b2ad9.js.map"
+    "main.b094e013.js.map": "/Amigo-Secreto/static/js/main.b094e013.js.map"
   },
   "entrypoints": [
     "static/css/main.e204f022.css",
-    "static/js/main.c70b2ad9.js"
+    "static/js/main.b094e013.js"
   ]
 }
