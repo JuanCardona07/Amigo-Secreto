@@ -1,0 +1,16 @@
+{
+  "name": "amigo-secreto-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Backend del juego Amigo Secreto: genera las parejas y solo revela la del participante que la consulta.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0"
+  }
+}

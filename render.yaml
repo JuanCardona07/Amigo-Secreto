@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: amigo-secreto-server
+    runtime: node
+    rootDir: server
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: FRONTEND_ORIGIN
+        value: https://juancardona07.github.io
