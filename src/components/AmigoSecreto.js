@@ -85,7 +85,7 @@ const AmigoSecreto = () => {
     }
 
     if (nombresIngresados.has(nombreCanonico)) {
-      setMensajeError("Ya ingresaste tu nombre, no puedes ingresar otro.");
+      setMensajeError("Ya revelaste tu pareja, no puedes consultarla de nuevo.");
       return;
     }
 
