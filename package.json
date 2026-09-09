@@ -3,9 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@emotion/react": "^11.13.3",
-    "@emotion/styled": "^11.13.0",
-    "@mui/material": "^6.1.2",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -14,15 +11,14 @@
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
   },
+  "homepage": "https://JuanCardona07.github.io/Amigo-Secreto",
   "scripts": {
     "start": "react-scripts start",
-  "build": "react-scripts build || true",
+    "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build -r https://github.com/JuanCardona07/Amigo-Secreto.git",
-    "homepage": "https://JuanCardona07.github.io/Amigo-Secreto"
-
+    "deploy": "gh-pages -d build -r git@github.com:JuanCardona07/Amigo-Secreto.git"
   },
   "eslintConfig": {
     "extends": [

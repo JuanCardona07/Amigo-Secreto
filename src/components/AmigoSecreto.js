@@ -1,101 +1,82 @@
-import React, { useState, useEffect } from "react";
-import "../index.css"; // Ruta correcta
+import React, { useState, useEffect, useCallback } from "react";
+import "../index.css";
+import { generarAsignaciones } from "../utils/asignaciones";
+import { buscarNombreCanonico, leerNombresIngresados } from "../utils/nombres";
+import {
+  NOMBRES_PARTICIPANTES,
+  DIAS_PARA_REGENERAR,
+} from "../constants/participantes";
+import FormularioNombre from "./FormularioNombre";
+import ResultadoMensaje from "./ResultadoMensaje";
+import ListaParticipantes from "./ListaParticipantes";
 
 const AmigoSecreto = () => {
-  const nombresParticipantes = [
-    "Marina",
-    "Mariela",
-    "Doris",
-    "Gladis",
-    "Jackeline",
-    "Mery",
-    "Olga",
-    "Sulma Eliana",
-    "Magnolia",
-  ];
-
   const [nombre, setNombre] = useState("");
   const [asignaciones, setAsignaciones] = useState({});
-  const [amigoSecreto, setAmigoSecreto] = useState("");
   const [mensajePersonalizado, setMensajePersonalizado] = useState("");
-  const [mensajeError, setMensajeError] = useState(""); // Para mostrar mensajes de error
-  const [nombresIngresados, setNombresIngresados] = useState(new Set()); // Para almacenar nombres ingresados
-  const [inputDeshabilitado, setInputDeshabilitado] = useState(false); // Para deshabilitar el input después de ingresar un nombre
+  const [mensajeError, setMensajeError] = useState("");
+  const [nombresIngresados, setNombresIngresados] = useState(new Set());
+  const [inputDeshabilitado, setInputDeshabilitado] = useState(false);
+
+  const generarNuevasAsignaciones = useCallback(() => {
+    try {
+      const nuevasAsignaciones = generarAsignaciones(NOMBRES_PARTICIPANTES);
+      localStorage.setItem("asignaciones", JSON.stringify(nuevasAsignaciones));
+      localStorage.setItem("fechaAsignacion", new Date().toISOString());
+      localStorage.setItem("nombresIngresados", JSON.stringify([]));
+      setAsignaciones(nuevasAsignaciones);
+      setNombresIngresados(new Set());
+    } catch (error) {
+      console.error("No se pudieron generar las asignaciones:", error);
+      setMensajeError(
+        "Ocurrió un error generando las asignaciones. Recarga la página."
+      );
+    }
+  }, []);
 
   useEffect(() => {
     const asignacionesGuardadas = localStorage.getItem("asignaciones");
     const fechaAsignacionGuardada = localStorage.getItem("fechaAsignacion");
 
     if (asignacionesGuardadas && fechaAsignacionGuardada) {
-      const fechaGuardada = new Date(fechaAsignacionGuardada);
-      const fechaActual = new Date();
-      const diferenciaDias = Math.floor(
-        (fechaActual - fechaGuardada) / (1000 * 60 * 60 * 24)
+      const diasTranscurridos = Math.floor(
+        (new Date() - new Date(fechaAsignacionGuardada)) / (1000 * 60 * 60 * 24)
       );
 
-      // Verificar si han pasado 5 días para regenerar asignaciones
-      if (diferenciaDias >= 5) {
-        generarAsignaciones();
+      if (diasTranscurridos >= DIAS_PARA_REGENERAR) {
+        generarNuevasAsignaciones();
       } else {
-        setAsignaciones(JSON.parse(asignacionesGuardadas));
+        try {
+          const asignacionesParseadas = JSON.parse(asignacionesGuardadas);
+          const coincideConParticipantesActuales =
+            Object.keys(asignacionesParseadas).sort().join("|") ===
+            [...NOMBRES_PARTICIPANTES].sort().join("|");
+
+          if (coincideConParticipantesActuales) {
+            setAsignaciones(asignacionesParseadas);
+            setNombresIngresados(leerNombresIngresados());
+          } else {
+            generarNuevasAsignaciones();
+          }
+        } catch {
+          generarNuevasAsignaciones();
+        }
       }
     } else {
-      // Generar nuevas asignaciones si no existen en localStorage
-      generarAsignaciones();
+      generarNuevasAsignaciones();
     }
-  }, []);
-
-  const generarAsignaciones = () => {
-    const shuffled = [...nombresParticipantes];
-    let deranged = [];
-
-    while (true) {
-      shuffled.sort(() => Math.random() - 0.5);
-      if (
-        shuffled.every((value, index) => value !== nombresParticipantes[index])
-      ) {
-        deranged = shuffled;
-        break;
-      }
-    }
-
-    const newAsignaciones = {};
-    nombresParticipantes.forEach((name, index) => {
-      newAsignaciones[name] = deranged[index];
-    });
-
-    // Verificar que no haya asignaciones repetidas
-    const valoresAsignaciones = Object.values(newAsignaciones);
-    const nombresUnicos = new Set(valoresAsignaciones);
-
-    if (
-      valoresAsignaciones.length === nombresParticipantes.length &&
-      valoresAsignaciones.length === nombresUnicos.size
-    ) {
-      // Guardar las nuevas asignaciones en localStorage con la fecha actual
-      const fechaActual = new Date();
-      localStorage.setItem("asignaciones", JSON.stringify(newAsignaciones));
-      localStorage.setItem("fechaAsignacion", fechaActual);
-      setAsignaciones(newAsignaciones);
-      console.log("Asignaciones válidas:", newAsignaciones);
-    } else {
-      console.error("Error: Asignaciones inválidas.");
-    }
-  };
+  }, [generarNuevasAsignaciones]);
 
   const mostrarAsignacion = () => {
-    if (nombresIngresados.has(nombre)) {
-      setMensajeError("Ya ingresaste tu nombre, no puedes ingresar otro.");
-      return;
-    }
-
-    if (!nombre) {
+    if (!nombre.trim()) {
       setMensajePersonalizado("");
       setMensajeError("Por favor, ingresa tu nombre.");
       return;
     }
 
-    if (!(nombre in asignaciones)) {
+    const nombreCanonico = buscarNombreCanonico(nombre, NOMBRES_PARTICIPANTES);
+
+    if (!nombreCanonico) {
       setMensajePersonalizado("");
       setMensajeError(
         "El nombre ingresado no está en la lista de participantes."
@@ -103,46 +84,38 @@ const AmigoSecreto = () => {
       return;
     }
 
-    // Bloquear el campo de texto después de ingresar el nombre
+    if (nombresIngresados.has(nombreCanonico)) {
+      setMensajeError("Ya ingresaste tu nombre, no puedes ingresar otro.");
+      return;
+    }
+
+    setMensajeError("");
     setInputDeshabilitado(true);
 
-    const amigo = asignaciones[nombre];
-    setAmigoSecreto(amigo);
-    setMensajePersonalizado(`${nombre}, tu Amigo Secreto es: ${amigo} 🎉`);
+    const pareja = asignaciones[nombreCanonico];
+    setMensajePersonalizado(`${nombreCanonico}, tu pareja es: ${pareja} 💕`);
 
-    // Agregar el nombre al conjunto de nombres ingresados
-    setNombresIngresados((prev) => new Set(prev).add(nombre));
+    const nuevosIngresados = new Set(nombresIngresados).add(nombreCanonico);
+    setNombresIngresados(nuevosIngresados);
+    localStorage.setItem(
+      "nombresIngresados",
+      JSON.stringify([...nuevosIngresados])
+    );
 
-    // Limpiar el campo de entrada
     setNombre("");
   };
 
   return (
     <div className="AmigoSecreto">
-      <h1>🎁 Juego del Amigo Secreto 🎁</h1>
-      <div>
-        <h2>🎅 ¡Descubre tu Amigo Secreto! 🎅</h2>
-        <p>Ingresa tu nombre para ver quién es tu Amigo Secreto:</p>
-        <input
-          type="text"
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
-          placeholder="Tu nombre"
-          className="input-nombre"
-          disabled={inputDeshabilitado} // Bloquear input después de ingresar nombre
-        />
-        <button onClick={mostrarAsignacion}>🔍 Mostrar Amigo Secreto</button>
-      </div>
-      {mensajePersonalizado && <h3>{mensajePersonalizado}</h3>}
-      {mensajeError && <h3 className="error">{mensajeError}</h3>}
-      <div>
-        <h4>Participantes:</h4>
-        <ul>
-          {nombresParticipantes.map((nombre, index) => (
-            <li key={index}>{nombre}</li>
-          ))}
-        </ul>
-      </div>
+      <h1>💝 Juego del Amigo Secreto 💝</h1>
+      <FormularioNombre
+        nombre={nombre}
+        onCambiarNombre={setNombre}
+        onEnviar={mostrarAsignacion}
+        deshabilitado={inputDeshabilitado}
+      />
+      <ResultadoMensaje mensaje={mensajePersonalizado} error={mensajeError} />
+      <ListaParticipantes participantes={NOMBRES_PARTICIPANTES} />
     </div>
   );
 };
