@@ -68,4 +68,9 @@ const revelarPareja = async (nombreCanonico) => {
   return asignaciones[nombreCanonico];
 };
 
-module.exports = { obtenerParticipantes, yaFueRevelado, revelarPareja };
+const regenerarEstado = async () => {
+  estadoEnMemoria = null;
+  await generarNuevoEstado();
+};
+
+module.exports = { obtenerParticipantes, yaFueRevelado, revelarPareja, regenerarEstado };

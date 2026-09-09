@@ -70,6 +70,10 @@ const revelarPareja = (nombreCanonico) => {
   return pareja;
 };
 
+const regenerarEstado = () => {
+  generarNuevoEstado();
+};
+
 cargarEstado();
 
-module.exports = { obtenerParticipantes, yaFueRevelado, revelarPareja };
+module.exports = { obtenerParticipantes, yaFueRevelado, revelarPareja, regenerarEstado };
